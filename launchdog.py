@@ -41,7 +41,7 @@ class Launchd(UserDict):
             if key in ("Disabled", "EnableGlobbing", "OnDemand", "RunAtLoad",
                     "InitGroups", "StartOnMount", "Debug", "WaitForDebugger",
                     "AbandonProcessGroup", "LowPriorityIO", "LaunchOnlyOnce",
-                    "EnableTransactions"):
+                    "EnableTransactions", "ServiceIPC"):
                 check_bool(key, value)
             elif key in ("UserName", "GroupName", "Label", "Program",
                     "RootDirectory", "WorkingDirectory", "StandardInPath",
