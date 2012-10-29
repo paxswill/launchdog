@@ -19,9 +19,9 @@ class Launchd(UserDict):
         if plist is None:
             plist=self.data
         # Check for the two required elements
-        if not plist["Label"]:
+        if "Label" not in plist:
             raise LaunchdPlistError("Label must be defined")
-        elif not plist["Program"] and not plist["ProgramArguments"]:
+        elif "Program" not in plist and "ProgramArguments" not in plist:
             raise LaunchdPlistError(
                     "Either Program or ProgramArguments must be defined")
         # Check the types of each element
