@@ -6,12 +6,10 @@ from collections import UserDict
 class LaunchdPlistError(KeyError):
     pass
 
-class Launchd(UserDict):
+def read(filename_or_handle):
+    return Launchd(plistlib.readPlist(filename_or_handle))
 
-    def __init__(self, filename_or_handle=None):
-        if filename_or_handle is not None:
-            self.data = plistlib.readPlist(filename_or_handle)
-            self.check_validity()
+class Launchd(UserDict):
 
     def write(self, filename_or_handle):
         self.check_validity()
