@@ -4,6 +4,11 @@ import plistlib
 import sys
 from collections import UserDict
 
+try:
+    type(basestring)
+except NameError:
+    basestring=str
+
 class LaunchdPlistError(KeyError):
     pass
 
@@ -32,7 +37,7 @@ class Launchd(UserDict):
                 raise LaunchdPlistError("{} is not a boolean value".format(
                     key))
         def check_str(key, value):
-            if not isinstance(value, str):
+            if not isinstance(value, basestring):
                 raise LaunchdPlistError("{} is not a string ".format(key))
         def check_int(key, value):
             if not isinstance(value, int):
@@ -56,7 +61,7 @@ class Launchd(UserDict):
             elif key in ("LimitLoadToHosts", "LimitLoadFromHosts",
                     "ProgramArguments", "WatchPaths", "QueueDirectories"):
                 for v in value:
-                    if not isinstance(v, str):
+                    if not isinstance(v, basestring):
                         raise LaunchdPlistError("'{}' in '{}' is not a string".
                                 format(v, key))
             elif key in ("Umask", "TimeOut", "ExitTimeOut", "ThrottleInterval",
