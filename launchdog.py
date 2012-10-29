@@ -89,27 +89,30 @@ class Launchd(UserDict):
                             for i in v.values():
                                 if not isinstance(i, bool):
                                     raise LaunchdPlistError(
-                                            "There is a non-boolean value \
-                                                    in {}".format(k))
+                                            "There is a non-boolean value in {}"
+                                            .format(k))
                         else:
-                            raise LaunchdPlistError("Invalid key '{}' in \
-                                    {}".format(k, key))
+                            raise LaunchdPlistError("Invalid key '{}' in {}"
+                                    .format(k, key))
                 elif not isinstance(value, bool):
-                    raise LaunchdPlistError("{} must either be a boolean or \
-                            dictionary".format(value))
+                    raise LaunchdPlistError(
+                            "{} must either be a boolean or dictionary"
+                            .format(value))
             elif key == "EnvironmentVariables":
                 for i in value.values():
-                    if not isinstance(i, str):
-                        raise LaunchdPlistError("{} contains someting other \
-                                than strings".format(key))
+                    if not isinstance(i, basestring):
+                        raise LaunchdPlistError(
+                                "{} contains someting other than strings"
+                                .format(key))
             elif key == "StartCalendarInterval":
                 def check_calendar(calendar):
                     for k, v in calendar.items():
                         if k in ("Minute", "Hour", "Day", "Weekday", "Month"):
                             check_int(k, v)
                         else:
-                            raise LaunchdPlistError("{} is an invalid key in \
-                                    {}".format(k, key))
+                            raise LaunchdPlistError(
+                                    "{} is an invalid key in {}"
+                                    .format(k, key))
                 if isinstance(value, dict):
                     check_calendar(value)
                 elif isinstance(value, (list, tuple)):
@@ -120,8 +123,9 @@ class Launchd(UserDict):
                     if k not in ("Core", "CPU", "Data", "FileSize",
                             "MemoryLock", "NumberOfFiles", "NumberOfProcesses",
                             "ResidentSetSize", "Stack"):
-                        raise LaunchdPlistError("'{}' is not supported as a \
-                                key of '{}'".format(k, key))
+                        raise LaunchdPlistError(
+                                "'{}' is not supported as a key of '{}'"
+                                .format(k, key))
                     else:
                         check_int(k, v)
             elif key == "Nice":
@@ -139,11 +143,12 @@ class Launchd(UserDict):
                                 check_int(k, v)
                                 warn_private(k)
                             else:
-                                raise LaunchdPlistError("'{}' is not a \
-                                        supported key for '{}'".format(k, key))
+                                raise LaunchdPlistError(
+                                        "'{}' is not a supported key for '{}'"
+                                        .format(k, key))
                     elif not isinstance(service, bool):
-                        raise LaunchdPlistError("The value for the Mach \
-                                services must be dictionaries or booleans")
+                        raise LaunchdPlistError(
+                                "The value for the Mach services must be dictionaries or booleans")
             elif key == "Sockets":
                 # Madness here...
                 # TODO: Unravel the man page for this section
@@ -151,8 +156,9 @@ class Launchd(UserDict):
                     raise LaunchdPlistError("{} needs to be a dictionary.".
                             format(key))
             else:
-                raise LaunchdPlistError("'{}' is an invalid key for a launchd \
-                        property list".format(key))
+                raise LaunchdPlistError(
+                        "'{}' is an invalid key for a launchd property list"
+                        .format(key))
             # Warn for deprecated keys
             if key in ("ServiceIPC", "OnDemand"):
                 warn_deprecated(key)
