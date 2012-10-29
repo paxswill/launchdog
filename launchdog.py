@@ -37,7 +37,7 @@ class Launchd(UserDict):
             if not isinstance(value, int):
                 raise LaunchdPlistError("{} is not an integer".format(key))
 
-        for key, value in plist.data.items():
+        for key, value in plist.items():
             if key in ("Disabled", "EnableGlobbing", "OnDemand", "RunAtLoad",
                     "InitGroups", "StartOnMount", "Debug", "WaitForDebugger",
                     "AbandonProcessGroup", "LowPriorityIO", "LaunchOnlyOnce",
