@@ -33,7 +33,7 @@ class Launchd(UserDict):
         def check_str(key, value):
             if not isinstance(value, str):
                 raise LaunchdPlistError("{} is not a string ".format(key))
-        def check_str(key, value):
+        def check_int(key, value):
             if not isinstance(value, int):
                 raise LaunchdPlistError("{} is not an integer".format(key))
 
