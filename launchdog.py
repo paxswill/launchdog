@@ -155,6 +155,9 @@ class Launchd(UserDict):
                 if not isinstance(value, dict):
                     raise LaunchdPlistError("{} needs to be a dictionary.".
                             format(key))
+            elif key == "BinaryOrderPreference":
+                check_int(key, value)
+                warn_private(key)
             else:
                 raise LaunchdPlistError(
                         "'{}' is an invalid key for a launchd property list"
