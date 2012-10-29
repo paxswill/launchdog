@@ -1,0 +1,22 @@
+# What is LaunchDog?
+
+LaunchDog is a quick tool to create [`launchd`][launchd] compatible property 
+lists. It's not particularly hard to write them yourself, but it can be
+tedious. There are also occasionally gotchas that are not immediately obvious
+if you haven't written one of these before. LaunchDog tries to make it easier.
+
+[launchd]: https://developer.apple.com/library/mac/#documentation/Darwin/Reference/ManPages/man8/launchd.8.html
+
+# How do I use LaunchDog?
+
+LaunchDog currently has two modes of operation. The simplest is interactive,
+which can used like this:
+
+    $ launchdog
+    # Stuff goes here
+
+The other way is more oriented towards scripts (although generating the plist
+once and copying it around is probably a better way).
+
+    $ launchdog -p "full program execution string" -l com.github.launchdog
+
