@@ -158,6 +158,18 @@ class Launchd(UserDict):
             elif key == "BinaryOrderPreference":
                 check_int(key, value)
                 warn_private(key)
+            elif key == "LimitLoadToSessionType":
+                # Contrary to the man page, LimitLoadToSessionType can be an
+                # array according to Apple Technote #2083
+                if isinstance(value, (tuple, list)):
+                    for session in value:
+                        if session not in ("Aqua", "StandardIO", "Background",
+                                "LoginWindow"):
+                            raise LaunchdPlistError("'{}' is an invalid session type for '{}'"
+                                    .format(session, key))
+                elif not isinstance(value, basestring):
+                    raise LaunchdPlistError("{} needs to either be an arry or a string"
+                            .format(key))
             else:
                 raise LaunchdPlistError(
                         "'{}' is an invalid key for a launchd property list"
