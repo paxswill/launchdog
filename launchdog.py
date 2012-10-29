@@ -1,6 +1,7 @@
 #! /usr/bin/env python3
 
 import plistlib
+import sys
 from collections import UserDict
 
 class LaunchdPlistError(KeyError):
@@ -36,6 +37,11 @@ class Launchd(UserDict):
         def check_int(key, value):
             if not isinstance(value, int):
                 raise LaunchdPlistError("{} is not an integer".format(key))
+
+        def warn_deprecated(key):
+            sys.stderr.write("{} has been deprecated\n".format(key))
+        def warn_private(key):
+            sys.stderr.write("{} is an undocumented, private key\n".format(key))
 
         for key, value in plist.items():
             if key in ("Disabled", "EnableGlobbing", "OnDemand", "RunAtLoad",
@@ -124,6 +130,9 @@ class Launchd(UserDict):
                         for k, v in service.items():
                             if k in ("ResetAtClose", "HideUntilCheckIn"):
                                 check_bool(k, v)
+                            elif k == "HostSpecialPort":
+                                check_int(k, v)
+                                warn_private(k)
                             else:
                                 raise LaunchdPlistError("'{}' is not a \
                                         supported key for '{}'".format(k, key))
@@ -139,3 +148,6 @@ class Launchd(UserDict):
             else:
                 raise LaunchdPlistError("'{}' is an invalid key for a launchd \
                         property list".format(key))
+            # Warn for deprecated keys
+            if key in ("ServiceIPC", "OnDemand"):
+                warn_deprecated(key)
