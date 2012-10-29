@@ -158,6 +158,9 @@ class Launchd(UserDict):
             elif key == "BinaryOrderPreference":
                 check_int(key, value)
                 warn_private(key)
+            elif key == "MultipleInstances":
+                check_bool(key, value)
+                warn_private(key)
             elif key == "LimitLoadToSessionType":
                 # Contrary to the man page, LimitLoadToSessionType can be an
                 # array according to Apple Technote #2083
@@ -170,6 +173,32 @@ class Launchd(UserDict):
                 elif not isinstance(value, basestring):
                     raise LaunchdPlistError("{} needs to either be an arry or a string"
                             .format(key))
+            elif key == "LaunchEvents":
+                # This key is documented in the xpc_set_event_stream_handler(3)
+                # manpage. As far as I can tell, this is a dict of dicts of
+                # dicts.
+                if not isinstance(value, dict):
+                    raise LaunchdPlistError("{} requires a dictionary value"
+                            .format(key))
+                else:
+                    for stream in value.values():
+                        if not isinstance(stream, dict):
+                            raise LaunchdPlistError(
+                                "Event streams for {} are supposed to be dictionaries of events"
+                                .format(key))
+                        else:
+                            for event in stream.values():
+                                if not isinstance(stream, dict):
+                                    raise LaunchdPlistError(
+                                            "Events for {} are defined by dictionaries"
+                                            .format(key))
+            elif key == "POSIXSpawnType":
+                check_str(key, value)
+                if value not in ("Interactive", "Adaptive", "TALApp", "Widget",
+                        "Widget", "iOSApp", "Background"):
+                    raise LaunchdPlistError("Invlaid value {} for key {}"
+                            .format(value, key))
+                    warn_private(key)
             else:
                 raise LaunchdPlistError(
                         "'{}' is an invalid key for a launchd property list"
