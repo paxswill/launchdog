@@ -86,7 +86,7 @@ class Launchd(UserDict):
                 elif not isinstance(value, bool):
                     raise LaunchdPlistError("{} must either be a boolean or \
                             dictionary".format(value))
-            elif key == "Environmentvariables":
+            elif key == "EnvironmentVariables":
                 for i in value.values():
                     if not isinstance(i, str):
                         raise LaunchdPlistError("{} contains someting other \
