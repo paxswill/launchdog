@@ -3,6 +3,7 @@
 import plistlib
 import sys
 from collections import UserDict
+from xml.parsers import expat
 
 try:
     type(basestring)
@@ -13,7 +14,10 @@ class LaunchdPlistError(KeyError):
     pass
 
 def read(filename_or_handle):
-    return Launchd(plistlib.readPlist(filename_or_handle))
+    try:
+        return Launchd(plistlib.readPlist(filename_or_handle))
+    except expat.ExpatError:
+        sys.stderr.write("{} is not an XML plist\n".format(filename_or_handle))
 
 class Launchd(UserDict):
 
@@ -52,7 +56,8 @@ class Launchd(UserDict):
             if key in ("Disabled", "EnableGlobbing", "OnDemand", "RunAtLoad",
                     "InitGroups", "StartOnMount", "Debug", "WaitForDebugger",
                     "AbandonProcessGroup", "LowPriorityIO", "LaunchOnlyOnce",
-                    "EnableTransactions", "ServiceIPC"):
+                    "EnableTransactions", "ServiceIPC", "SessionCreate"):
+                # SessionCreate is mentioned in passing int TN #2083
                 check_bool(key, value)
             elif key in ("UserName", "GroupName", "Label", "Program",
                     "RootDirectory", "WorkingDirectory", "StandardInPath",
@@ -158,8 +163,12 @@ class Launchd(UserDict):
             elif key == "BinaryOrderPreference":
                 check_int(key, value)
                 warn_private(key)
-            elif key == "MultipleInstances":
+            elif key in ("MultipleInstances", "NSSupportsSuddenTermination",
+                    "HopefullyExitsLast", "BeginTransactionAtShutdown"):
                 check_bool(key, value)
+                warn_private(key)
+            elif key == "SHAuthorizationRight":
+                check_str(key, value)
                 warn_private(key)
             elif key == "LimitLoadToSessionType":
                 # Contrary to the man page, LimitLoadToSessionType can be an
@@ -204,5 +213,5 @@ class Launchd(UserDict):
                         "'{}' is an invalid key for a launchd property list"
                         .format(key))
             # Warn for deprecated keys
-            if key in ("ServiceIPC", "OnDemand"):
+            if key in ("ServiceIPC", "OnDemand", "HopefullyExitsLast"):
                 warn_deprecated(key)
