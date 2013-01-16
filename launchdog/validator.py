@@ -23,52 +23,72 @@ class ValidationError(KeyError):
 
 
 class Validator(object):
-    """Validates that the key is a string
-
-    This class could probably be called PlistKeyValidator, as the
-    `type(key) == str` restriction just applies to plists."""
-
-    def __init__(self, **kwargs):
-        # Just to swallow kwargs from children before creating the object
-        super().__init__(**kwargs)
+    """Base class for Validators.
+    """
 
     @staticmethod
     def _valid_type(value, typ):
+        """Check that a value is an instance of typ.
+
+        This is a convenience wrapper around issinstance(), raising a
+        ValidationError exception in the case of failure."""
         if not isinstance(value, typ):
             raise ValidationError("type of '{}' is not a '{}'".format(value,
                 typ.__name__), typ, value)
 
-    @classmethod
-    def validate(cls, key, value):
+    def validate(self, key=None, value=None):
+        """Validate the key and/or value.
+
+        Implementing classes _must_ call super()'s implementation of this
+        method. Most methods in this module are designed to be chained
+        together, and using super() ensures that they are all called in
+        order."""
+        pass
+
+class MatchingKeyValidator(Validator):
+    def __init__(self, key=None, **kwargs):
+        self.key = key
+        super().__init__(**kwargs)
+
+    def validate(self, key=None, value=None):
+        super().validate(key, value)
+        if key != self.key:
+            raise ValidationError("key '{}' is not '{}'".format(key, self.key))
+
+
+class PlistValidator(MatchingKeyValidator):
+    """Validates that the key is a string
+    """
+
+    def validate(cls, key=None, value=None):
+        super().validate(key, value)
         cls._valid_type(key, basestring)
 
 
 class TypeValidator(Validator):
-    def __init__(self, key=None, typ=None, **kwargs):
-        self.key = key
+    def __init__(self, typ=None, **kwargs):
         self.typ = typ
         super().__init__(**kwargs)
 
-    def validate(self, key, value=None):
+    def validate(self, key=None, value=None):
         if value is None:
             value = key
-            key = self.key
+            key = None
         super().validate(key, value)
-        if key != self.key:
-            raise ValidationError("'{}' is not '{}'".format(key, self.key))
         self._valid_type(value, self.typ)
 
 
 class RangeValidator(Validator):
-    def __init__(self, maximum=None, minimum=None, **kwargs):
-        self.maximum = minimum
-        self.minimum = maximum
+    def __init__(self, minimum=None, maximum=None, **kwargs):
+        self.maximum = maximum
+        self.minimum = minimum
+        if self.minimum is not None and self.maximum is not None:
+            assert self.minimum < self.maximum
         super().__init__(**kwargs)
 
-    def validate(self, key, value=None):
+    def validate(self, key=None, value=None):
         if value is None:
             value = key
-            key = self.key
         super().validate(key, value)
         if self.maximum is not None and value > self.maximum:
             raise ValidationError("{} is more than the maximum value {}".
@@ -98,6 +118,11 @@ class MappingValidator(Validator):
         self.defaults = defaults
 
     def validate(self, key, value):
+        """Validate the given map.
+
+        `value` is a map of strings to values. This values must match the
+        types given in `self.types`."""
+
         super().validate(key, value)
         for reqd in self.required:
             if reqd not in self.types:
