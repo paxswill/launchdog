@@ -28,38 +28,57 @@ class Validator(object):
     This class could probably be called PlistKeyValidator, as the
     `type(key) == str` restriction just applies to plists."""
 
-    def validate(self, key, value):
-        if not isinstance(key, basestring):
-            raise ValidationError("'{}' is not a string".format(key))
+    def __init__(self, **kwargs):
+        # Just to swallow kwargs from children before creating the object
+        super().__init__(**kwargs)
 
+    @staticmethod
+    def _valid_type(value, typ):
+        if not isinstance(value, typ):
+            raise ValidationError("type of '{}' is not a '{}'".format(value,
+                typ.__name__), typ, value)
 
-def _create_type_validator(typ, name=None):
-    """Create a Validator for a specific type
-
-    Creates a Validator subclass that checks that the value is of the given
-    class."""
-
+    @classmethod
     def validate(cls, key, value):
-        super(cls).validate(key, value)
-        if not isinstance(value, cls.typ):
-            raise ValidationError("type of '{}' ({}) is not '{}'".format(
-                key, value, cls.typ.__name__))
+        cls._valid_type(key, basestring)
 
-    name = name if name is not None else typ.__name__.title()+"TypeValidator"
-    return type(name, (Validator,), {'validate': classmethod(validate),
-        'typ': typ})
 
-# Create validators for types found in plists.
-# This could be rewritten to operate on a sequence of types, but this form is
-# more readable/discoverable, especially for subclassing.
-IntTypeValidator = _create_type_validator(int)
-StrTypeValidator = _create_type_validator(basestring, 'StrTypeValidator')
-BoolTypeValidator = _create_type_validator(bool)
-ContainerTypeValidator = _create_type_validator(Container)
-SequenceTypeValidator = _create_type_validator(Sequence)
-MappingTypeValidator = _create_type_validator(Mapping)
+class TypeValidator(Validator):
+    def __init__(self, key=None, typ=None, **kwargs):
+        self.key = key
+        self.typ = typ
+        super().__init__(**kwargs)
 
-class MappingValidator(MappingTypeValidator):
+    def validate(self, key, value=None):
+        if value is None:
+            value = key
+            key = self.key
+        super().validate(key, value)
+        if key != self.key:
+            raise ValidationError("'{}' is not '{}'".format(key, self.key))
+        self._valid_type(value, self.typ)
+
+
+class RangeValidator(Validator):
+    def __init__(self, maximum=None, minimum=None, **kwargs):
+        self.maximum = minimum
+        self.minimum = maximum
+        super().__init__(**kwargs)
+
+    def validate(self, key, value=None):
+        if value is None:
+            value = key
+            key = self.key
+        super().validate(key, value)
+        if self.maximum is not None and value > self.maximum:
+            raise ValidationError("{} is more than the maximum value {}".
+                    format(value, self.maximum))
+        if self.minimum is not None and value < self.minimum:
+            raise ValidationError("{} is less than the maximum value {}".
+                    format(value, self.minimum))
+
+
+class MappingValidator(Validator):
     """Validate the types of the values in a Mapping
     """
 
@@ -70,9 +89,10 @@ class MappingValidator(MappingTypeValidator):
         the values being a single type or a tuple of types that are valid
         for that key.
 
-        'required' is a sequence of keys that are required to be present in
+        `required` is a sequence of keys that are required to be present in
         the mapping."""
 
+        super().__init__(self)
         self.types = types
         self.required = required
         self.defaults = defaults
