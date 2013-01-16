@@ -83,3 +83,24 @@ class RangeTest(unittest.TestCase):
         with self.assertRaises(ValidationError):
             validator.validate(-20)
 
+class MappingTest(unittest.TestCase):
+    def setUp(self):
+        inet_validator = MappingValidator({'Wait': bool})
+        self.types = {'Label': str, 'Disabled': bool, 'OnDemand': bool,
+                'inetdCompatibility':inet_validator}
+        self.validator = MappingValidator(self.types)
+
+    def test_simple(self):
+        test_map = {'Label': 'com.paxswill.launchdog', 'Disabled': True}
+        self.assertIsNone(self.validator.validate(value=test_map))
+        with self.assertRaises(ValidationError):
+            self.validator.validate(value={'Label': True})
+
+    def test_nested(self):
+        test_map = {'Label': 'com.paxswill.launchdog', 'Disabled': False,
+                'inetdCompatibility': {'Wait': True}}
+        self.assertIsNone(self.validator.validate(value=test_map))
+        # modify map
+        test_map['inetdCompatibility'] = True
+        with self.assertRaises(ValidationError):
+            self.validator.validate(value=test_map)

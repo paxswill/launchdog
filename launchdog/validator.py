@@ -98,11 +98,11 @@ class RangeValidator(Validator):
                     format(value, self.minimum))
 
 
-class MappingValidator(Validator):
+class MappingValidator(TypeValidator):
     """Validate the types of the values in a Mapping
     """
 
-    def __init__(self, types, required=[]):
+    def __init__(self, types, required=[], **kwargs):
         """Create a MappingValidator.
 
         `types` is a mapping with the keys being the names of keys and
@@ -112,25 +112,32 @@ class MappingValidator(Validator):
         `required` is a sequence of keys that are required to be present in
         the mapping."""
 
-        super().__init__(self)
         self.types = types
         self.required = required
-        self.defaults = defaults
+        self.children = children
+        super().__init__(typ=Mapping, **kwargs)
 
-    def validate(self, key, value):
+    def validate(self, key=None, value=None):
         """Validate the given map.
 
         `value` is a map of strings to values. This values must match the
         types given in `self.types`."""
 
         super().validate(key, value)
+        # Check that all required keys are present
         for reqd in self.required:
-            if reqd not in self.types:
+            if reqd not in value:
                 raise ValidationError("required key '{}' not present".format(
                     reqd))
-        for key, value in self.types.items():
-            if not isinstance(value, self.types[key]):
-                raise ValidationError("type of '{}' ({}) is not '{}'".format(
-                    value, value.__class__, self.types[key]))
 
+        for sub_key, sub_value in value.items():
+            if sub_key not in self.types:
+                raise ValidationError("'{}' is not in the allowed set of keys"
+                        .format(sub_key))
+            else:
+                type_or_validator = self.types[sub_key]
+                if isinstance(type_or_validator, (type, tuple)):
+                    self._valid_type(sub_value, type_or_validator)
+                elif isinstance(type_or_validator, Validator):
+                    type_or_validator.validate(sub_key, sub_value)
 
